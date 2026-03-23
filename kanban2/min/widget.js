@@ -1,71 +1,429 @@
-(function(t){typeof define=="function"&&define.amd?define(t):t()})(function(){"use strict";let t,d;const m=new Date("3000-01-01"),f="#DCDCDC",R="#000000";let A,g=[];window.addEventListener("load",async e=>{t=new WidgetSDK,d=await t.loadTranslations(["widget.js"]);const a=`If empty, the widget use the column properties (based on choices or references) to make the list. Else, you can either:
+let t, d;
+const g = /* @__PURE__ */ new Date("3000-01-01"), T = "#DCDCDC", R = "#000000";
+let v, f = [];
+window.addEventListener("load", async (e) => {
+  t = new WidgetSDK(), d = await t.loadTranslations(["widget.js"]);
+  const a = `If empty, the widget use the column properties (based on choices or references) to make the list. Else, you can either:
 • Provides a list, separated by ";"
-• Provides a reference to a table or a column starting with a "$" ($TableID or $TableID.ColumnID)`;t.configureOptions([WidgetSDK.newItem("columns",null,"Behavior","Configure the behavior of each columns","Columns",{columnId:"STATUT",template:[WidgetSDK.newItem("addbutton",!0,"Can add card","If checked, display a button to add card to the column."),WidgetSDK.newItem("isdone",!1,"Is done","If checked, cards in the columns are considered as over."),WidgetSDK.newItem("useconfetti",!1,"Use confetti","If checked, confetti apprear when a card enter in the column.")]}),WidgetSDK.newItem("ref","","References","List of task references available.","Cards options",{description:a,columnId:"REFERENCE_PROJET",type:"lookup"}),WidgetSDK.newItem("types","","Type","List of task types available.","Cards options",{description:a,columnId:"TYPE",type:"lookup"}),WidgetSDK.newItem("incharge","","In charge","List of people that can be in charge of the task.","Cards options",{description:a,columnId:"RESPONSABLE",type:"lookup"}),WidgetSDK.newItem("cardcolor","","Card color","List of color available for card background.","Cards options",{description:a,columnId:"COULEUR",type:"lookup"}),WidgetSDK.newItem("rotation",!0,"Tilt","If checked, cards are randomly tilted.","Display"),WidgetSDK.newItem("compact",!1,"Compact","If checked, use a compact rendering.","Display"),WidgetSDK.newItem("readonly",!1,"Read only","If checked, kanban is ready only.","Display"),WidgetSDK.newItem("hideedit",!1,"Hide editing form","If checked, hide the editing form when click on a card.","Display"),WidgetSDK.newItem("gristeditcard",!1,"Grist Record Card","If checked, opens the grist record card on double click.","Display")],"#config-view","#main-view",{onOptChange:v,onOptLoad:v}),t.initMetaData(),t.ready({requiredAccess:"full",allowSelectBy:!0,columns:[{name:"STATUT",title:"Status",description:"Defines the Kanban column",type:"Choice",strictType:!0},{name:"DESCRIPTION",title:"Task",description:"Task name",type:"Any"},{name:"DESCRIPTION_DISPLAY",title:"Task Display",description:"Displayed card content (e.g. a formula column adding html)",type:"Any",optional:!0},{name:"DEADLINE",title:"Deadline",description:"Can also be use as priority",type:"Date",optional:!0},{name:"REFERENCE_PROJET",title:"Reference",description:"Reference associated with the task",type:"Any",optional:!0},{name:"TYPE",title:"Type",description:"Type associated with the task",type:"Any",optional:!0},{name:"RESPONSABLE",title:"In charge",description:"Who is in charge",type:"Any",optional:!0},{name:"CREE_PAR",title:"Created by",type:"Any",optional:!0},{name:"CREE_LE",title:"Creation date",type:"DateTime",optional:!0},{name:"DERNIERE_MISE_A_JOUR",title:"Last update date",description:"Updated after any change",type:"DateTime",optional:!0},{name:"NOTES",title:"Notes",description:"Additional notes",type:"Any",optional:!0},{name:"COULEUR",title:"Card color",description:"Choice or html value",type:"Choice,Text",optional:!0},{name:"TAGS",title:"Tags",description:"Additional fields to display",type:"Any",optional:!0,allowMultiple:!0}]}),t.onRecords(I,{expandRefs:!1,keepEncoded:!1,mapRef:!0}),t.isLoaded().then(async()=>{t.initDone=!0}),grist.on("message",async o=>{o.mappingsChange&&L()})});async function I(e){A=e;const a=document.getElementById("conteneur-kanban");a.innerHTML="";const o=await t.col.STATUT.getChoices();if(!o||o.length===0){console.error(d("No choice available in the Status column"));return}o.forEach((n,i)=>{a.appendChild($(n,i))}),e?.length>0&&(e.forEach(n=>{const i=O(n),s=document.querySelector(`.contenu-colonne[data-statut="${n.STATUT}"]`);s&&s.insertBefore(i,s.firstChild)}),t.opt.readonly||document.querySelectorAll(".contenu-colonne").forEach(n=>{new Sortable(n,{group:"kanban-todo",animation:150,onEnd:async function(i){const s=i.to.dataset.statut;if(s===i.from.dataset.statut){if(t.map.DEADLINE){let r=i.item.dataset.deadline||"9999-12-31";if(i.oldIndex!==i.newIndex&&new Date(r)>=m){let l=m.getFullYear(),p=[];document.querySelectorAll(".contenu-colonne").forEach(u=>{u.getAttribute("data-statut")===s&&u.querySelectorAll(".carte").forEach(async c=>{r=c.getAttribute("data-deadline")||"9999-12-31",new Date(r)>=m&&(r=`${l}-01-01`,c.setAttribute("data-deadline",r),l+=1,p.push(t.formatRecord(c.getAttribute("data-todo-id"),{DEADLINE:r})))})});try{await t.updateRecords(p)}catch(u){console.error(d("Error during status update:"),u)}}}}else try{await D(i.item.dataset.todoId,"STATUT",s)}catch(r){console.error(d("Error during status update:"),r)}b(n)}}),b(n)}),document.querySelectorAll(".colonne-kanban").forEach(N))}async function v(e){await t.isMapped(),I(A)}function $(e,a){const o=t.opt.columns[a],n=document.createElement("div");return n.className=`colonne-kanban${!o.addbutton&&!t.opt.compact?" colonne-nobouton":""}`,n.id=e,localStorage.getItem(`column-todo-${e}`)==="true"&&n.classList.add("collapsed"),n.innerHTML=`
-        <div class="entete-colonne" style="background-color: ${t.col.STATUT.getColor(e)??f};color:${t.col.STATUT.getTextColor(e)??R}">
+• Provides a reference to a table or a column starting with a "$" ($TableID or $TableID.ColumnID)`;
+  t.configureOptions(
+    [
+      /** List all options that need to be stored by Grist 
+       * Two options are possibles, use a short version: 
+       * • WidgetSDK.newItem('option_id', default_value, 'title',  'subtitle', 'group'))
+       *      ⇒ option_id: need to be a unique alpha numeric string with - or _
+       *      ⇒ default_value: the default value assigned to the option, can be any type
+       *      ⇒ title: displayed option title
+       *      ⇒ subtitle: displayed short description
+       *      ⇒ group: can be common to several option to group them together
+       * 
+       * • or provide an object with possible keys:
+       *      ⇒ id: mandatory, need to be a unique alpha numeric string with - or _
+       *      ⇒ default: default value, may defines the type (see below)
+       *      ⇒ title: displayed option title
+       *      ⇒ subtitle: displayed short description
+       *      ⇒ description: displayed long description
+       *      ⇒ group: can be common to several option to group them together
+       *      ⇒ hidden: if true, option will be available on the backend, but not displayed to the user
+       *      ⇒ type: defines which kind of UI is used when options are displayed. If possible type is automatically 
+       *          deduced from default value if possible. 
+       *          Can be: boolean, number, string, longstring, dropdown, object, template, templateform, lookup
+       *      ⇒ values: for dropdown type, defines the displayed list. Can be an Array or Grist column reference
+       *      ⇒ format: function to format the raw value to a more standard type can can be used by the SDK
+       *      ⇒ parse: function to back to a raw value from a formated value
+       *      ⇒ columnId: column ID as defined in grist.ready. If defined and type is not set, set type to dropdown
+       *      ⇒ template: object or array of object that defines a template for a dynamic list of options. Use the same 
+       *          kind of object as for main options, but less keys are usefull:
+       *              id, title, subtitle, description, type, values, format, parse
+       * 
+       * Remark: for Title, subtitle, description and group, do not translate them with T function, the translation will
+       * be automatically managed by the SDK.
+      */
+      WidgetSDK.newItem(
+        "columns",
+        null,
+        "Behavior",
+        "Configure the behavior of each columns",
+        "Columns",
+        {
+          columnId: "STATUT",
+          template: [
+            WidgetSDK.newItem("addbutton", !0, "Can add card", "If checked, display a button to add card to the column."),
+            WidgetSDK.newItem("isdone", !1, "Is done", "If checked, cards in the columns are considered as over."),
+            WidgetSDK.newItem("useconfetti", !1, "Use confetti", "If checked, confetti apprear when a card enter in the column.")
+          ]
+        }
+      ),
+      WidgetSDK.newItem(
+        "ref",
+        "",
+        "References",
+        "List of task references available.",
+        "Cards options",
+        { description: a, columnId: "REFERENCE_PROJET", type: "lookup" }
+      ),
+      WidgetSDK.newItem(
+        "types",
+        "",
+        "Type",
+        "List of task types available.",
+        "Cards options",
+        { description: a, columnId: "TYPE", type: "lookup" }
+      ),
+      WidgetSDK.newItem(
+        "incharge",
+        "",
+        "In charge",
+        "List of people that can be in charge of the task.",
+        "Cards options",
+        { description: a, columnId: "RESPONSABLE", type: "lookup" }
+      ),
+      WidgetSDK.newItem(
+        "cardcolor",
+        "",
+        "Card color",
+        "List of color available for card background.",
+        "Cards options",
+        { description: a, columnId: "COULEUR", type: "lookup" }
+      ),
+      WidgetSDK.newItem("rotation", !0, "Tilt", "If checked, cards are randomly tilted.", "Display"),
+      WidgetSDK.newItem("compact", !1, "Compact", "If checked, use a compact rendering.", "Display"),
+      WidgetSDK.newItem("readonly", !1, "Read only", "If checked, kanban is ready only.", "Display"),
+      WidgetSDK.newItem("hideedit", !1, "Hide editing form", "If checked, hide the editing form when click on a card.", "Display"),
+      WidgetSDK.newItem("gristeditcard", !1, "Grist Record Card", "If checked, opens the grist record card on double click.", "Display")
+    ],
+    "#config-view",
+    // DOM element or ID where insert options interface
+    "#main-view",
+    // DOM element or ID where the widget is encapsuled, used to hide it when option are shown
+    { onOptChange: A, onOptLoad: A }
+    //even subcription, onOptLoad also available
+  ), t.initMetaData(), t.ready({
+    requiredAccess: "full",
+    // can be also 'readonly'
+    allowSelectBy: !0,
+    columns: [
+      /** List of object that defines all columns linkable to the widget. Be carefull that
+       * only column linked will be accessible, if you need to access all of them, let the
+       * array empty.
+       * 
+       * Objects can contains keys:
+       *      ⇒ name: unique id. This id is used when you deal with data
+       *      ⇒ title: title displayed by Grist
+       *      ⇒ description: short description displayed by Grist
+       *      ⇒ type: list (comma separated) of column type that can be associated. Any by default, can be:
+       *              Any, Date, DateTime, Numeric, Int, Bool, Choice, Text, Ref, RefList
+       *      ⇒ optional: true if the association is not mandatory for the widget (false by default)
+       *      ⇒ allowMultiple: true if more than one column can be assiciated (false by default)
+       *      ⇒ strictType: true to not allow implicite type conversion (false by default)
+       * 
+       * Remark: for title and description do not translate them with T function, the translation will
+       * be automatically managed by the SDK.
+       */
+      { name: "STATUT", title: "Status", description: "Defines the Kanban column", type: "Choice", strictType: !0 },
+      { name: "DESCRIPTION", title: "Task", description: "Task name", type: "Any" },
+      { name: "DESCRIPTION_DISPLAY", title: "Task Display", description: "Displayed card content (e.g. a formula column adding html)", type: "Any", optional: !0 },
+      { name: "DEADLINE", title: "Deadline", description: "Can also be use as priority", type: "Date", optional: !0 },
+      { name: "REFERENCE_PROJET", title: "Reference", description: "Reference associated with the task", type: "Any", optional: !0 },
+      { name: "TYPE", title: "Type", description: "Type associated with the task", type: "Any", optional: !0 },
+      { name: "RESPONSABLE", title: "In charge", description: "Who is in charge", type: "Any", optional: !0 },
+      { name: "CREE_PAR", title: "Created by", type: "Any", optional: !0 },
+      { name: "CREE_LE", title: "Creation date", type: "DateTime", optional: !0 },
+      { name: "DERNIERE_MISE_A_JOUR", title: "Last update date", description: "Updated after any change", type: "DateTime", optional: !0 },
+      { name: "NOTES", title: "Notes", description: "Additional notes", type: "Any", optional: !0 },
+      { name: "COULEUR", title: "Card color", description: "Choice or html value", type: "Choice,Text", optional: !0 },
+      { name: "TAGS", title: "Tags", description: "Additional fields to display", type: "Any", optional: !0, allowMultiple: !0 }
+    ]
+    // async onEditOptions() {
+    //     await W?.showConfig(); // manage the display of options when user click on "Open configuration" in Grist interface
+    // },
+  }), t.onRecords(D, { expandRefs: !1, keepEncoded: !1, mapRef: !0 }), t.isLoaded().then(async () => {
+    t.initDone = !0;
+  }), grist.on("message", async (o) => {
+    o.mappingsChange && L();
+  });
+});
+async function D(e) {
+  v = e;
+  const a = document.getElementById("conteneur-kanban");
+  a.innerHTML = "";
+  const o = await t.col.STATUT.getChoices();
+  if (!o || o.length === 0) {
+    console.error(d("No choice available in the Status column"));
+    return;
+  }
+  o.forEach((n, i) => {
+    a.appendChild($(n, i));
+  }), e?.length > 0 && (e.forEach((n) => {
+    const i = O(n), s = document.querySelector(`.contenu-colonne[data-statut="${n.STATUT}"]`);
+    s && s.insertBefore(i, s.firstChild);
+  }), t.opt.readonly || document.querySelectorAll(".contenu-colonne").forEach((n) => {
+    new Sortable(n, {
+      group: "kanban-todo",
+      animation: 150,
+      onEnd: async function(i) {
+        const s = i.to.dataset.statut;
+        if (s === i.from.dataset.statut) {
+          if (t.map.DEADLINE) {
+            let r = i.item.dataset.deadline || "9999-12-31";
+            if (i.oldIndex !== i.newIndex && new Date(r) >= g) {
+              let c = g.getFullYear(), p = [];
+              document.querySelectorAll(".contenu-colonne").forEach((u) => {
+                u.getAttribute("data-statut") === s && u.querySelectorAll(".carte").forEach(async (l) => {
+                  r = l.getAttribute("data-deadline") || "9999-12-31", new Date(r) >= g && (r = `${c}-01-01`, l.setAttribute("data-deadline", r), c += 1, p.push(t.formatRecord(l.getAttribute("data-todo-id"), { DEADLINE: r })));
+                });
+              });
+              try {
+                await t.updateRecords(p);
+              } catch (u) {
+                console.error(d("Error during status update:"), u);
+              }
+            }
+          }
+        } else
+          try {
+            await b(i.item.dataset.todoId, "STATUT", s);
+          } catch (r) {
+            console.error(d("Error during status update:"), r);
+          }
+        I(n);
+      }
+    }), I(n);
+  }), document.querySelectorAll(".colonne-kanban").forEach(N));
+}
+async function A(e) {
+  await t.isMapped(), D(v);
+}
+function $(e, a) {
+  const o = t.opt.columns[a], n = document.createElement("div");
+  return n.className = `colonne-kanban${!o.addbutton && !t.opt.compact ? " colonne-nobouton" : ""}`, n.id = e, localStorage.getItem(`column-todo-${e}`) === "true" && n.classList.add("collapsed"), n.innerHTML = `
+        <div class="entete-colonne" style="background-color: ${t.col.STATUT.getColor(e) ?? T};color:${t.col.STATUT.getTextColor(e) ?? R}">
             <div class="titre-statut">${e} <span class="compteur-colonne">(0)</span></div>
-            ${o.addbutton&&!t.opt.readonly?`
-            <button class="bouton-ajouter-entete ${t.opt.compact?" compact":""}" onclick="creerNouvelleTache('${e}')">+</button>
-            `:""}
+            ${o.addbutton && !t.opt.readonly ? `
+            <button class="bouton-ajouter-entete ${t.opt.compact ? " compact" : ""}" onclick="creerNouvelleTache('${e}')">+</button>
+            ` : ""}
             <button class="bouton-toggle" onclick="toggleColonne(this.closest('.colonne-kanban'), event)">⇄</button>
         </div>
-        ${o.addbutton&&!t.opt.readonly?`
-            <button class="bouton-ajouter ${t.opt.compact?" compact":""}" onclick="creerNouvelleTache('${e}')">+ ${d("Add a new task")}</button>
-        `:""}
+        ${o.addbutton && !t.opt.readonly ? `
+            <button class="bouton-ajouter ${t.opt.compact ? " compact" : ""}" onclick="creerNouvelleTache('${e}')">+ ${d("Add a new task")}</button>
+        ` : ""}
         <div class="contenu-colonne" data-statut="${e}"></div>
-    `,n}function L(){const e=document.getElementsByClassName("colonne-kanban");Array.prototype.forEach.call(e,a=>{a.style=`background-color: ${t.col.STATUT.getColor(a.id)??f};color:${t.col.STATUT.getTextColor(a.id)??R}`}),w()}async function w(){await t.isMapped(),g=[],t.map.TAGS&&(g=await t.map.TAGS.map(async e=>await(await t.meta.getColMeta(e))?.getChoices()??[]),g=await Promise.all(g))}function O(e){const a=document.createElement("div");a.className=`carte ${t.opt.rotation?"":" norotate"}${t.opt.compact?" compact":""}`,a.setAttribute("data-todo-id",e.id),a.setAttribute("data-last-update",e.DERNIERE_MISE_A_JOUR||""),a.setAttribute("data-deadline",e.DEADLINE||""),e.COULEUR&&t.col.COULEUR.type==="Choice"&&(t.col.COULEUR.getColor(e.COULEUR)?a.setAttribute("style",`background-color: ${t.col.COULEUR.getColor(e.COULEUR)}`):a.setAttribute("style",`background-color: ${(e.COULEUR.startsWith("#")?"":"#")+e.COULEUR}`));const o=e.TYPE||"",n=e.DESCRIPTION_DISPLAY||e.DESCRIPTION||d("No description"),i=e.DEADLINE?C(e.DEADLINE):"",s=e.RESPONSABLE||"",r=e.REFERENCE_PROJET,l=e.TAGS||[];let p="";l.forEach(c=>p+=c?`<div class="more-tag">${c}</div>`:"");const u=t.getValueListOption("columns",e.STATUT);return a.innerHTML=`
-        ${r&&r.length>0?`<div class="projet-ref truncate">#${r}</div>`:""}
-        ${o?`<div class="type-tag truncate">${o}</div>`:r&&r.length>0?"<div>&nbsp;</div>":""}
-        ${l.length>0?`<div>${p}</div>`:""}
+    `, n;
+}
+function L() {
+  const e = document.getElementsByClassName("colonne-kanban");
+  Array.prototype.forEach.call(e, (a) => {
+    a.style = `background-color: ${t.col.STATUT.getColor(a.id) ?? T};color:${t.col.STATUT.getTextColor(a.id) ?? R}`;
+  }), w();
+}
+async function w() {
+  await t.isMapped(), f = [], t.map.TAGS && (f = await t.map.TAGS.map(async (e) => await (await t.meta.getColMeta(e))?.getChoices() ?? []), f = await Promise.all(f));
+}
+function O(e) {
+  const a = document.createElement("div");
+  a.className = `carte ${t.opt.rotation ? "" : " norotate"}${t.opt.compact ? " compact" : ""}`, a.setAttribute("data-todo-id", e.id), a.setAttribute("data-last-update", e.DERNIERE_MISE_A_JOUR || ""), a.setAttribute("data-deadline", e.DEADLINE || ""), e.COULEUR && t.col.COULEUR.type === "Choice" && (t.col.COULEUR.getColor(e.COULEUR) ? a.setAttribute("style", `background-color: ${t.col.COULEUR.getColor(e.COULEUR)}`) : a.setAttribute("style", `background-color: ${(e.COULEUR.startsWith("#") ? "" : "#") + e.COULEUR}`));
+  const o = e.TYPE || "", n = e.DESCRIPTION_DISPLAY || e.DESCRIPTION || d("No description"), i = e.DEADLINE ? S(e.DEADLINE) : "", s = e.RESPONSABLE || "", r = e.REFERENCE_PROJET, c = e.TAGS || [];
+  let p = "";
+  c.forEach((l) => p += l ? `<div class="more-tag">${l}</div>` : "");
+  const u = t.getValueListOption("columns", e.STATUT);
+  return a.innerHTML = `
+        ${r && r.length > 0 ? `<div class="projet-ref truncate">#${r}</div>` : ""}
+        ${o ? `<div class="type-tag truncate">${o}</div>` : r && r.length > 0 ? "<div>&nbsp;</div>" : ""}
+        ${c.length > 0 ? `<div>${p}</div>` : ""}
         <div class="description">${n}</div>
-        ${i?`<div class="deadline${e.DEADLINE<Date.now()?" late":""} truncate">📅 ${i}</div>`:s?"<div>&nbsp;</div>":""}
-        ${s?`<div class="responsable-badge truncate">${s}</div>`:""}
-        ${u?.isdone?`<div class="tampon-termine" style="color: ${t.col.STATUT.getColor(e.STATUT)??f};">${e.STATUT}</div>`:""}      
-    `,a.addEventListener("click",()=>{grist.setCursorPos({rowId:e.id}),t.opt.hideedit||y(e)}),a.addEventListener("dblclick",()=>{grist.setCursorPos({rowId:e.id}),t.opt.gristeditcard?grist.commandApi.run("viewAsCard"):t.opt.hideedit||y(e)}),a}async function D(e,a,o,n){try{if(n?.stopPropagation(),a==="STATUT"){const s=t.getValueListOption("columns",o);s&&s.useconfetti&&k()}let i={[a]:o||void 0};t.map.DERNIERE_MISE_A_JOUR&&(i.DERNIERE_MISE_A_JOUR=new Date().toISOString()),await t.updateRecords(t.formatRecord(e,i))}catch(i){console.error(d("Error during update:"),i)}}function b(e){const a=Array.from(e.children),o=e.dataset.isdone;a.sort((n,i)=>{let s=0;if(t.map.DEADLINE)if(o){const r=n.getAttribute("data-last-update")||"1970-01-01",l=i.getAttribute("data-last-update")||"1970-01-01";s=new Date(l)-new Date(r)}else{const r=n.getAttribute("data-deadline")||"9999-12-31",l=i.getAttribute("data-deadline")||"9999-12-31";s=new Date(r)-new Date(l)}if(s===0){const r=parseInt(n.getAttribute("data-todo-id"))||0,l=parseInt(i.getAttribute("data-todo-id"))||0;return r-l}else return s}),a.forEach(n=>e.appendChild(n))}function N(e){const a=e.querySelector(".contenu-colonne"),o=e.querySelector(".compteur-colonne");a&&o&&(o.textContent=`(${a.children.length})`)}function y(e){const a=document.getElementById("popup-todo"),o=document.querySelector(".carte.active"),n=document.querySelector(`[data-todo-id="${e.id}"]`),i=t.getValueListOption("columns",e.STATUT);if(t.opt.readonly){h();return}o?.classList.remove("active"),n?.classList.add("active"),a.style=`border-left-color: ${t.col.STATUT.getColor(e.STATUT)??f}`,a.dataset.statut=e.STATUT,a.dataset.isdone=i?!1:i.isdone,a.dataset.currentTodo=e.id;const s=a.querySelector(".popup-title"),r=a.querySelector(".popup-content"),l=a.querySelector(".popup-header");l.style=`background-color: ${t.col.STATUT.getColor(e.STATUT)??f};color:${t.col.STATUT.getTextColor(e.STATUT)??R}`;const p=a.querySelector(".bouton-fermer");p.style=`color:${t.col.STATUT.getTextColor(e.STATUT)??R}`,s.textContent=e.DESCRIPTION||d("New task");let u=1,c='<div class="field-row">';t.map.DEADLINE&&(c+=`
+        ${i ? `<div class="deadline${e.DEADLINE < Date.now() ? " late" : ""} truncate">📅 ${i}</div>` : s ? "<div>&nbsp;</div>" : ""}
+        ${s ? `<div class="responsable-badge truncate">${s}</div>` : ""}
+        ${u?.isdone ? `<div class="tampon-termine" style="color: ${t.col.STATUT.getColor(e.STATUT) ?? T};">${e.STATUT}</div>` : ""}      
+    `, a.addEventListener("click", () => {
+    grist.setCursorPos({ rowId: e.id }), t.opt.hideedit || y(e);
+  }), a.addEventListener("dblclick", () => {
+    grist.setCursorPos({ rowId: e.id }), t.opt.gristeditcard ? grist.commandApi.run("viewAsCard") : t.opt.hideedit || y(e);
+  }), a;
+}
+async function b(e, a, o, n) {
+  try {
+    if (n?.stopPropagation(), a === "STATUT") {
+      const s = t.getValueListOption("columns", o);
+      s && s.useconfetti && k();
+    }
+    let i = { [a]: o || void 0 };
+    t.map.DERNIERE_MISE_A_JOUR && (i.DERNIERE_MISE_A_JOUR = (/* @__PURE__ */ new Date()).toISOString()), await t.updateRecords(t.formatRecord(e, i));
+  } catch (i) {
+    console.error(d("Error during update:"), i);
+  }
+}
+function I(e) {
+  const a = Array.from(e.children), o = e.dataset.isdone;
+  a.sort((n, i) => {
+    let s = 0;
+    if (t.map.DEADLINE)
+      if (o) {
+        const r = n.getAttribute("data-last-update") || "1970-01-01", c = i.getAttribute("data-last-update") || "1970-01-01";
+        s = new Date(c) - new Date(r);
+      } else {
+        const r = n.getAttribute("data-deadline") || "9999-12-31", c = i.getAttribute("data-deadline") || "9999-12-31";
+        s = new Date(r) - new Date(c);
+      }
+    if (s === 0) {
+      const r = parseInt(n.getAttribute("data-todo-id")) || 0, c = parseInt(i.getAttribute("data-todo-id")) || 0;
+      return r - c;
+    } else
+      return s;
+  }), a.forEach((n) => e.appendChild(n));
+}
+function N(e) {
+  const a = e.querySelector(".contenu-colonne"), o = e.querySelector(".compteur-colonne");
+  a && o && (o.textContent = `(${a.children.length})`);
+}
+function y(e) {
+  const a = document.getElementById("popup-todo"), o = document.querySelector(".carte.active"), n = document.querySelector(`[data-todo-id="${e.id}"]`), i = t.getValueListOption("columns", e.STATUT);
+  if (t.opt.readonly) {
+    h();
+    return;
+  }
+  o?.classList.remove("active"), n?.classList.add("active"), a.style = `border-left-color: ${t.col.STATUT.getColor(e.STATUT) ?? T}`, a.dataset.statut = e.STATUT, a.dataset.isdone = i ? !1 : i.isdone, a.dataset.currentTodo = e.id;
+  const s = a.querySelector(".popup-title"), r = a.querySelector(".popup-content"), c = a.querySelector(".popup-header");
+  c.style = `background-color: ${t.col.STATUT.getColor(e.STATUT) ?? T};color:${t.col.STATUT.getTextColor(e.STATUT) ?? R}`;
+  const p = a.querySelector(".bouton-fermer");
+  p.style = `color:${t.col.STATUT.getTextColor(e.STATUT) ?? R}`, s.textContent = e.DESCRIPTION || d("New task");
+  let u = 1, l = '<div class="field-row">';
+  t.map.DEADLINE && (l += `
             <div class="field">
             <label class="field-label">${t.map.DEADLINE}</label>
             <input type="date" class="field-input" 
                     value="${J(e.DEADLINE)}"
                     onchange="mettreAJourChamp(${e.id}, 'DEADLINE', this.value, event)">
             </div>
-        `),t.map.REFERENCE_PROJET&&(c+=T(e.id,e.REFERENCE_PROJET,t.valuesList.ref,t.map.REFERENCE_PROJET,"REFERENCE_PROJET",t.col.REFERENCE_PROJET.getIsFormula()),u+=1),u%2===0&&(c+='</div><div class="field-row">'),t.map.TYPE&&(c+=T(e.id,e.TYPE,t.valuesList.types,t.map.TYPE,"TYPE",t.col.TYPE.getIsFormula()),u+=1),u%2===0&&(c+='</div><div class="field-row">'),t.map.RESPONSABLE&&(c+=T(e.id,e.RESPONSABLE,t.valuesList.incharge,t.map.RESPONSABLE,"RESPONSABLE",t.col.RESPONSABLE.getIsFormula()),u+=1),u%2===0&&(c+='</div><div class="field-row">'),t.map.TAGS&&t.map.TAGS.forEach((S,E)=>{c+=T(e.id,e.TAGS[E],g[E],S,S,t.col.TAGS[E].getIsFormula()),u+=1,u%2===0&&(c+='</div><div class="field-row">')}),t.map.COULEUR&&(c+=T(e.id,e.COULEUR,t.valuesList.cardcolor,t.map.COULEUR,"COULEUR"),t.col.COULEUR.getIsFormula(),u+=1),c+=`</div>
+        `), t.map.REFERENCE_PROJET && (l += m(e.id, e.REFERENCE_PROJET, t.valuesList.ref, t.map.REFERENCE_PROJET, "REFERENCE_PROJET", t.col.REFERENCE_PROJET.getIsFormula()), u += 1), u % 2 === 0 && (l += '</div><div class="field-row">'), t.map.TYPE && (l += m(e.id, e.TYPE, t.valuesList.types, t.map.TYPE, "TYPE", t.col.TYPE.getIsFormula()), u += 1), u % 2 === 0 && (l += '</div><div class="field-row">'), t.map.RESPONSABLE && (l += m(e.id, e.RESPONSABLE, t.valuesList.incharge, t.map.RESPONSABLE, "RESPONSABLE", t.col.RESPONSABLE.getIsFormula()), u += 1), u % 2 === 0 && (l += '</div><div class="field-row">'), t.map.TAGS && t.map.TAGS.forEach((C, E) => {
+    l += m(e.id, e.TAGS[E], f[E], C, C, t.col.TAGS[E].getIsFormula()), u += 1, u % 2 === 0 && (l += '</div><div class="field-row">');
+  }), t.map.COULEUR && (l += m(e.id, e.COULEUR, t.valuesList.cardcolor, t.map.COULEUR, "COULEUR"), t.col.COULEUR.getIsFormula(), u += 1), l += `</div>
         <div class="field">
             <label class="field-label">${t.map.DESCRIPTION}</label>
             <textarea class="field-textarea auto-expand" 
                     onchange="mettreAJourChamp(${e.id}, 'DESCRIPTION', this.value, event)"
-                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">${e.DESCRIPTION||""}</textarea>
+                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">${e.DESCRIPTION || ""}</textarea>
         </div>
-    `,t.map.NOTES&&(c+=`<div class="field">
+    `, t.map.NOTES && (l += `<div class="field">
             <label class="field-label">${t.map.NOTES}</label>
             <textarea class="field-textarea auto-expand" 
                       onchange="mettreAJourChamp(${e.id}, 'NOTES', this.value, event)"
-                      oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">${e.NOTES||""}</textarea>
+                      oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">${e.NOTES || ""}</textarea>
           </div>
-        `),(t.map.CREE_LE&&e.CREE_LE||t.map.CREE_PAR&&e.CREE_PAR||t.map.DERNIERE_MISE_A_JOUR&&e.DERNIERE_MISE_A_JOUR)&&(c+=`<div class="info-creation">
-                ${d("Created")} ${t.map.CREE_LE&&e.CREE_LE?d("on %on",{on:C(e.CREE_LE)}):""} 
-                ${t.map.CREE_PAR&&e.CREE_PAR?d("by %by",{by:e.CREE_PAR||"-"}):""}
-                ${t.map.DERNIERE_MISE_A_JOUR&&e.DERNIERE_MISE_A_JOUR?"<br>"+d("Last update on %on",{on:C(e.DERNIERE_MISE_A_JOUR)||"-"}):""}
+        `), (t.map.CREE_LE && e.CREE_LE || t.map.CREE_PAR && e.CREE_PAR || t.map.DERNIERE_MISE_A_JOUR && e.DERNIERE_MISE_A_JOUR) && (l += `<div class="info-creation">
+                ${d("Created")} ${t.map.CREE_LE && e.CREE_LE ? d("on %on", { on: S(e.CREE_LE) }) : ""} 
+                ${t.map.CREE_PAR && e.CREE_PAR ? d("by %by", { by: e.CREE_PAR || "-" }) : ""}
+                ${t.map.DERNIERE_MISE_A_JOUR && e.DERNIERE_MISE_A_JOUR ? "<br>" + d("Last update on %on", { on: S(e.DERNIERE_MISE_A_JOUR) || "-" }) : ""}
             </div>
-        `),t.opt.readonly||(c+=` 
+        `), t.opt.readonly || (l += ` 
           <div class="popup-actions">
             <button class="popup-action-button bouton-supprimer" onclick="supprimerTodo(${e.id}, event)" 
                     title="${d("Remove the task")}">🗑️</button>
           </div>
-        `),r.innerHTML=c,setTimeout(()=>{document.querySelectorAll(".auto-expand").forEach(E=>{E.style.height="",E.style.height=E.scrollHeight+"px"})},0),a.classList.add("visible")}function T(e,a,o,n,i,s){let r="";return o?.length>0?o.length<10?(r+=`
+        `), r.innerHTML = l, setTimeout(() => {
+    document.querySelectorAll(".auto-expand").forEach((E) => {
+      E.style.height = "", E.style.height = E.scrollHeight + "px";
+    });
+  }, 0), a.classList.add("visible");
+}
+function m(e, a, o, n, i, s) {
+  let r = "";
+  return o?.length > 0 ? o.length < 10 ? (r += `
                 <div class="field">
                     <label class="field-label">${n}</label>
                     <select class="field-select" onchange="mettreAJourChamp(${e}, '${i}', this.value, event)">
-                    <option value="" ${s?"disabled":""}></option>`,o.forEach(l=>{r+=`<option value="${l}" ${a===l?"selected":""}>${l}</option>`}),r+=`</select>
+                    <option value="" ${s ? "disabled" : ""}></option>`, o.forEach((c) => {
+    r += `<option value="${c}" ${a === c ? "selected" : ""}>${c}</option>`;
+  }), r += `</select>
                 </div>        
-            `):(r+=`
+            `) : (r += `
                 <div class="field">
                     <label class="field-label">${n}</label>
-                    <input type="text" list="list-${i}" class="field-select" onchange="mettreAJourChamp(${e}, '${i}', this.value, event)" ${s?"disabled":""}/>
-                    <datalist id="list-${i}">`,o.forEach(l=>{r+=`<option value="${l}" ${a===l?"selected":""}>${l}</option>`}),r+=`</datalist>
+                    <input type="text" list="list-${i}" class="field-select" onchange="mettreAJourChamp(${e}, '${i}', this.value, event)" ${s ? "disabled" : ""}/>
+                    <datalist id="list-${i}">`, o.forEach((c) => {
+    r += `<option value="${c}" ${a === c ? "selected" : ""}>${c}</option>`;
+  }), r += `</datalist>
                 </div>        
-            `):r+=`
+            `) : r += `
             <div class="field">
                 <label class="field-label">${n}</label>
-                <input type="text" class="field-input" value="${a||""}" 
-                    onchange="mettreAJourChamp(${e}, '${i}', this.value, event)" ${s?"disabled":""}>
+                <input type="text" class="field-input" value="${a || ""}" 
+                    onchange="mettreAJourChamp(${e}, '${i}', this.value, event)" ${s ? "disabled" : ""}>
             </div>
-        `,r}function h(){const e=document.getElementById("popup-todo"),a=e.dataset.currentTodo,o=document.querySelector(`[data-todo-id="${a}"]`);o&&o.classList.remove("active"),e.classList.remove("visible")}document.addEventListener("keydown",e=>{e.key==="Escape"&&h()}),document.addEventListener("click",e=>{const a=document.getElementById("popup-todo");a.classList.contains("visible")&&!a.querySelector(".popup-content").contains(e.target)&&!e.target.closest(".carte")&&!e.target.closest(".popup-header")&&h()});async function U(e){try{let a={DESCRIPTION:"",STATUT:e};t.map.TYPE&&!t.col.TYPE.getIsFormula()&&(a.TYPE=""),t.map.REFERENCE_PROJET&&!t.col.REFERENCE_PROJET.getIsFormula()&&(a.REFERENCE_PROJET=null),t.map.DERNIERE_MISE_A_JOUR&&!t.col.DERNIERE_MISE_A_JOUR.getIsFormula()&&(a.DERNIERE_MISE_A_JOUR=new Date().toISOString()),t.map.CREE_LE&&!t.col.CREE_LE.getIsFormula()&&(a.CREE_LE=new Date().toISOString());const o=await t.createRecords({fields:a});if(o.id&&o.id>0){const n=await t.fetchSelectedRecord(o.id);grist.setCursorPos({rowId:o.id}),t.opt.hideedit||y(n)}}catch(a){console.error(d("Error on creation:"),a)}}async function _(e,a){if(a?.stopPropagation(),confirm(d("Are you sure you want to delete this task?")))try{await t.destroyRecords(e),h()}catch(o){console.error(d("Error on delete:"),o)}}function P(e,a){a?.stopPropagation(),e.classList.toggle("collapsed"),localStorage.setItem(`column-todo-${e.querySelector(".titre-statut").textContent.trim()}`,e.classList.contains("collapsed"))}function k(){const a=Date.now()+2e3,o={startVelocity:30,spread:360,ticks:60,zIndex:0};function n(s,r){return Math.random()*(r-s)+s}const i=setInterval(function(){const s=a-Date.now();if(s<=0)return clearInterval(i);const r=50*(s/2e3);confetti(Object.assign({},o,{particleCount:r,origin:{x:n(.1,.3),y:Math.random()-.2}})),confetti(Object.assign({},o,{particleCount:r,origin:{x:n(.7,.9),y:Math.random()-.2}}))},250)}function C(e){if(!e)return"-";const a=new Date(e);if(a>=m)return null;const o=a.getDate().toString().padStart(2,"0"),n=a.toLocaleDateString(t.cultureFull,{month:"short"}),i=a.getFullYear();return`${o} ${n} ${i}`}function J(e){if(!e)return"";try{const a=new Date(e);return a>=m?"":a.toISOString().split("T")[0]}catch(a){return console.error(d("Error on date formating:"),a),""}}window.toggleColonne=P,window.togglePopupTodo=y,window.fermerPopup=h,window.mettreAJourChamp=D,window.creerNouvelleTache=U,window.supprimerTodo=_});
+        `, r;
+}
+function h() {
+  const e = document.getElementById("popup-todo"), a = e.dataset.currentTodo, o = document.querySelector(`[data-todo-id="${a}"]`);
+  o && o.classList.remove("active"), e.classList.remove("visible");
+}
+document.addEventListener("keydown", (e) => {
+  e.key === "Escape" && h();
+});
+document.addEventListener("click", (e) => {
+  const a = document.getElementById("popup-todo");
+  a.classList.contains("visible") && !a.querySelector(".popup-content").contains(e.target) && !e.target.closest(".carte") && !e.target.closest(".popup-header") && h();
+});
+async function U(e) {
+  try {
+    let a = { DESCRIPTION: "", STATUT: e };
+    t.map.TYPE && !t.col.TYPE.getIsFormula() && (a.TYPE = ""), t.map.REFERENCE_PROJET && !t.col.REFERENCE_PROJET.getIsFormula() && (a.REFERENCE_PROJET = null), t.map.DERNIERE_MISE_A_JOUR && !t.col.DERNIERE_MISE_A_JOUR.getIsFormula() && (a.DERNIERE_MISE_A_JOUR = (/* @__PURE__ */ new Date()).toISOString()), t.map.CREE_LE && !t.col.CREE_LE.getIsFormula() && (a.CREE_LE = (/* @__PURE__ */ new Date()).toISOString());
+    const o = await t.createRecords({ fields: a });
+    if (o.id && o.id > 0) {
+      const n = await t.fetchSelectedRecord(o.id);
+      grist.setCursorPos({ rowId: o.id }), t.opt.hideedit || y(n);
+    }
+  } catch (a) {
+    console.error(d("Error on creation:"), a);
+  }
+}
+async function _(e, a) {
+  if (a?.stopPropagation(), confirm(d("Are you sure you want to delete this task?")))
+    try {
+      await t.destroyRecords(e), h();
+    } catch (o) {
+      console.error(d("Error on delete:"), o);
+    }
+}
+function P(e, a) {
+  a?.stopPropagation(), e.classList.toggle("collapsed"), localStorage.setItem(`column-todo-${e.querySelector(".titre-statut").textContent.trim()}`, e.classList.contains("collapsed"));
+}
+function k() {
+  const a = Date.now() + 2e3, o = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+  function n(s, r) {
+    return Math.random() * (r - s) + s;
+  }
+  const i = setInterval(function() {
+    const s = a - Date.now();
+    if (s <= 0)
+      return clearInterval(i);
+    const r = 50 * (s / 2e3);
+    confetti(Object.assign({}, o, {
+      particleCount: r,
+      origin: { x: n(0.1, 0.3), y: Math.random() - 0.2 }
+    })), confetti(Object.assign({}, o, {
+      particleCount: r,
+      origin: { x: n(0.7, 0.9), y: Math.random() - 0.2 }
+    }));
+  }, 250);
+}
+function S(e) {
+  if (!e) return "-";
+  const a = new Date(e);
+  if (a >= g) return null;
+  const o = a.getDate().toString().padStart(2, "0"), n = a.toLocaleDateString(t.cultureFull, { month: "short" }), i = a.getFullYear();
+  return `${o} ${n} ${i}`;
+}
+function J(e) {
+  if (!e) return "";
+  try {
+    const a = new Date(e);
+    return a >= g ? "" : a.toISOString().split("T")[0];
+  } catch (a) {
+    return console.error(d("Error on date formating:"), a), "";
+  }
+}
+window.toggleColonne = P;
+window.togglePopupTodo = y;
+window.fermerPopup = h;
+window.mettreAJourChamp = b;
+window.creerNouvelleTache = U;
+window.supprimerTodo = _;
